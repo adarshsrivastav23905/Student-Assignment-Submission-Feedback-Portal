@@ -37,11 +37,22 @@ class StorageService:
 
     def __init__(self):
         self.backend = Config.STORAGE_BACKEND
-        self.upload_dir = Config.LOCAL_UPLOAD_DIR
+        self.upload_dir = self._resolve_upload_dir()
 
         # Ensure local upload directory exists
         if self.backend == "local":
             os.makedirs(self.upload_dir, exist_ok=True)
+
+    def _resolve_upload_dir(self):
+        """Resolve the configured upload directory to an absolute, stable path."""
+        configured_dir = Config.LOCAL_UPLOAD_DIR
+        if os.path.isabs(configured_dir):
+            return os.path.normpath(configured_dir)
+
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        return os.path.normpath(os.path.join(project_root, configured_dir))
 
     def upload_file(self, file, assignment_id, student_id, original_filename):
         """
@@ -116,7 +127,8 @@ class StorageService:
 
     def _upload_local(self, file, storage_path):
         """Save file to local filesystem."""
-        full_path = os.path.join(self.upload_dir, storage_path)
+        normalized_storage_path = storage_path.replace("/", os.sep)
+        full_path = os.path.normpath(os.path.join(self.upload_dir, normalized_storage_path))
 
         # Create directories if they don't exist
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
@@ -132,7 +144,8 @@ class StorageService:
 
     def _get_local_path(self, storage_path):
         """Get full local path for a stored file."""
-        full_path = os.path.join(self.upload_dir, storage_path)
+        normalized_storage_path = storage_path.replace("/", os.sep)
+        full_path = os.path.normpath(os.path.join(self.upload_dir, normalized_storage_path))
         if os.path.exists(full_path):
             return full_path
         return None

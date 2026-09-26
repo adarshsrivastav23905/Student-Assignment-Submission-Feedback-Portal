@@ -100,6 +100,29 @@ def test_student_can_submit_assignment(client):
     assert payload["message"] in {"Assignment submitted successfully", "Assignment resubmitted successfully"}
 
 
+def test_teacher_can_download_submission_file(client):
+    student_token = get_token(client, "student@example.com", "student123")
+    teacher_token = get_token(client, "teacher@example.com", "teacher123")
+
+    file_obj = io.BytesIO(b"downloadable file content")
+    file_obj.name = "download-test.pdf"
+    submit = client.post(
+        "/api/assignments/1/submit",
+        headers={"Authorization": f"Bearer {student_token}"},
+        data={"file": (file_obj, "download-test.pdf")},
+        content_type="multipart/form-data",
+    )
+    assert submit.status_code == 201, submit.get_data(as_text=True)
+    submission_id = submit.get_json()["submission"]["id"]
+
+    download = client.get(
+        f"/api/submissions/{submission_id}/download",
+        headers={"Authorization": f"Bearer {teacher_token}"},
+    )
+    assert download.status_code == 200, download.get_data(as_text=True)
+    assert b"downloadable file content" in download.data
+
+
 def test_teacher_can_grade_submission(client):
     student_token = get_token(client, "student@example.com", "student123")
     teacher_token = get_token(client, "teacher@example.com", "teacher123")

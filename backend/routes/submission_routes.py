@@ -246,7 +246,7 @@ def download_submission(submission_id):
 
     # Get file from storage
     file_path = storage_service.download_file(submission.storage_path)
-    if not file_path:
+    if not file_path or not os.path.exists(file_path):
         return jsonify({"error": "File not found in storage"}), 404
 
     # For local storage, send the file directly
