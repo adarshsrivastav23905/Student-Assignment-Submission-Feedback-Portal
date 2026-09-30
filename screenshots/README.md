@@ -1,11 +1,13 @@
-# Portfolio screenshot checklist
+# Portfolio screenshots
 
-Save reviewed, fictional-data screenshots in this folder:
+Reviewed showcase screenshots captured from the local app using fictional demo accounts:
 
-- `student-dashboard.png` — 16:9 or 4:5; show summary, course progress, and upcoming work.
-- `teacher-dashboard.png` — 16:9 or 4:5; show review counts, assignment management, and recent activity.
-- `assignment-review.png` — focus on assignment requirements and the teacher's submission-review workflow.
-- `feedback-view.png` — show a representative grade and constructive feedback with fictional data.
-- `mobile-dashboard.png` — 9:16; keep text legible and avoid browser/device UI that distracts.
+- `student-dashboard.png` (1920 × 1200) — student overview, course progress, and upcoming work.
+- `teacher-dashboard.png` (1920 × 1200) — review counts, assignment management, and course activity.
+- `assignment-review.png` (1920 × 540) — assignment requirements and the teacher's submission-review workflow.
+- `feedback-view.png` (1920 × 329) — representative grade and constructive instructor feedback.
+- `mobile-dashboard.png` (1080 × 1920) — 9:16 student dashboard for an Instagram Story or Reel cover.
 
-Use a consistent viewport, clean browser chrome, and a neutral page zoom. Before sharing, verify that the images contain no actual student names, email addresses, uploaded files, authentication tokens, or personal information. The README documents suggested captures; add the image files only after visually reviewing them.
+The desktop dashboards are 16:10 captures; crop or frame them consistently for 16:9 LinkedIn graphics or 4:5 Instagram carousel slides. Do not stretch images. The mobile capture is already 9:16.
+
+The screenshots use seeded demonstration data, including fictional names and a sample assignment file. Before sharing any additional captures, check that they contain no real student records, email addresses, uploaded files, authentication tokens, or personal information. Cloud-console and live-deployment screenshots are intentionally not included because this project is not connected to a cloud provider.
