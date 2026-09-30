@@ -4,41 +4,48 @@ A role-based academic portal for course work, assignment submissions, grading, a
 
 > **Project status:** This is a locally runnable academic prototype, not a live cloud deployment. Its current defaults are SQLite, local filesystem uploads, and application-managed JWT authentication. The cloud architectures below are deployment plans; a managed cloud database, object-storage adapter, production identity configuration, and hosting have not been provisioned by this repository.
 
+## Author
+
+**Adarsh Srivastav**
+
+Cloud Computing coursework project
+
 ## Table of Contents
 
-- [Overview](#overview)
+- [Project Overview](#project-overview)
 - [Problem Statement](#problem-statement)
 - [Objectives](#objectives)
-- [Features](#features)
+- [Key Features](#key-features)
 - [User Roles](#user-roles)
+- [Working Principle](#working-principle)
 - [Cloud Computing Concepts](#cloud-computing-concepts)
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Software and Tools](#software-and-tools)
 - [Database Design](#database-design)
-- [Cloud Storage](#cloud-storage)
-- [Authentication and Authorization](#authentication--authorization)
+- [File Storage](#file-storage)
+- [Authentication and Authorization](#authentication-and-authorization)
 - [Assignment Workflow](#assignment-workflow)
 - [Submission Workflow](#submission-workflow)
 - [Feedback and Grading](#feedback--grading)
-- [REST APIs](#rest-apis)
-- [Folder Structure](#folder-structure)
+- [API Reference](#api-reference)
+- [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [Local Setup](#local-setup)
 - [Running the Application](#running-the-application)
 - [Testing](#testing)
-- [Cloud Deployment](#cloud-deployment)
+- [Cloud Deployment Plan](#cloud-deployment-plan)
 - [Security](#security)
 - [Scalability](#scalability)
 - [Failure Handling](#failure-handling)
-- [Screenshots](#screenshots)
-- [Results](#results)
+- [Project Screenshots](#project-screenshots)
+- [Results and Validation](#results-and-validation)
 - [Limitations](#limitations)
-- [Future Improvements](#future-improvements)
-- [Learning Outcomes](#learning-outcomes)
-- [Author](#author)
+- [Future Scope](#future-scope)
+- [Skills and Learning Outcomes](#skills-and-learning-outcomes)
+- [Conclusion](#conclusion)
 
-## Overview
+## Project Overview
 
 The portal supports an end-to-end coursework workflow. Teachers organize work into courses, publish assignments, and review submissions. Students enroll in courses, submit permitted files before deadlines, and receive grades and feedback.
 
@@ -57,7 +64,7 @@ Email, paper, and disconnected file-sharing workflows make assignment tracking, 
 - Demonstrate an application architecture that can be adapted to managed cloud services.
 - Make the project reproducible and testable on a local machine.
 
-## Features
+## Key Features
 
 - Student and teacher registration and login.
 - JWT-protected REST endpoints and role-based access controls.
@@ -80,6 +87,19 @@ Email, paper, and disconnected file-sharing workflows make assignment tracking, 
 
 New accounts can select a student or teacher role. This is convenient for a local academic demonstration, but public role selection is not an appropriate production authorization policy.
 
+## Working Principle
+
+The portal connects the teacher and student activities in one coursework flow:
+
+```text
+Teacher creates a course
+    -> Student enrolls
+    -> Teacher publishes an assignment
+    -> Student uploads a file
+    -> Teacher reviews and grades the work
+    -> Student views the grade and feedback
+```
+
 ## Cloud Computing Concepts
 
 - **Client-server architecture:** Browser interface calls a Flask REST API.
@@ -90,7 +110,7 @@ New accounts can select a student or teacher role. This is convenient for a loca
 - **Configuration and secrets:** Runtime settings are read from environment variables; deployment secrets should be stored in a provider's secret manager.
 - **Observability:** The Flask application logs startup and server errors and exposes a health endpoint. Managed log aggregation is not configured here.
 
-## Architecture
+## System Architecture
 
 ```mermaid
 flowchart LR
@@ -108,7 +128,7 @@ flowchart LR
 
 The solid paths show what the local application uses. The dotted paths are possible deployment integrations, not services currently connected by this project.
 
-## Technology Stack
+## Software and Tools
 
 | Area | Technology |
 | --- | --- |
@@ -134,13 +154,13 @@ The SQLAlchemy models in `backend/models/database.py` define:
 
 SQLite is used for local development and automated tests. Production use requires a managed database, a migration strategy, backups, and suitable access policies.
 
-## Cloud Storage
+## File Storage
 
 The active storage service saves submitted files on the local filesystem. The database stores submission metadata and a storage path; it does not store the uploaded file contents.
 
 For a cloud deployment, implement and configure a provider-backed storage adapter, then use private buckets/containers and short-lived authorized download URLs. Suitable service families include Amazon S3, Azure Blob Storage, or Google Cloud Storage. Environment variables such as `STORAGE_BACKEND`, `CLOUD_STORAGE_BUCKET`, and `CLOUD_STORAGE_KEY` exist as configuration points, but a cloud adapter and production cloud credentials are **not** supplied or enabled by this repository.
 
-## Authentication & Authorization
+## Authentication and Authorization
 
 - Registration and login return a signed JWT and user profile.
 - The frontend stores the token in browser `localStorage` and sends it as a Bearer token on API calls.
@@ -172,7 +192,7 @@ Late-submission behavior and resubmission availability are controlled by assignm
 
 Teachers grade a submission by providing marks and written feedback. The API validates the marks against the assignment maximum and records the grader and grading time. Students retrieve feedback only for submissions they are authorized to access.
 
-## REST APIs
+## API Reference
 
 All API routes are served by the Flask application. Protected routes require `Authorization: Bearer <token>`. File submission uses `multipart/form-data`.
 
@@ -200,7 +220,7 @@ All API routes are served by the Flask application. Protected routes require `Au
 
 The API is implemented in `backend/routes/`. Request and response payload details can be inspected in the route handlers and exercised with the test suite.
 
-## Folder Structure
+## Project Structure
 
 ```text
 .
@@ -237,7 +257,7 @@ The API is implemented in `backend/routes/`. Request and response payload detail
 | `frontend/css/` | Responsive styles and visual design system. |
 | `frontend/js/` | API client, auth/session helpers, UI rendering, and workflows. |
 | `tests/` | Pytest API and workflow tests. |
-| `screenshots/` | Reviewed demonstration screenshots and capture notes. |
+| `screenshots/` | Project workflow evidence and screenshot notes. |
 | `instance/` | Runtime SQLite data; generated locally and ignored by Git. |
 | `uploads/` | Runtime uploaded files; generated locally and ignored by Git. |
 
@@ -340,7 +360,7 @@ python -m pytest -q
 
 The current suite covers health checks, registration/login, role authorization, assignment creation, student submission uploads, authorized downloads, grading, and authentication route aliases. A successful run currently reports **8 passed**.
 
-## Cloud Deployment
+## Cloud Deployment Plan
 
 The repository does not include deployment manifests or a cloud storage adapter. The following are implementation approaches for taking the prototype online; each requires provider setup and testing before it can be called deployed.
 
@@ -404,26 +424,34 @@ The application separates API routes, models, and services, which gives a starti
 
 The Flask app returns JSON error responses for common HTTP errors, including missing routes, oversized uploads, and internal errors. API requests in the frontend surface network and server errors through notifications. A production system should additionally provide structured request IDs, safe retries for idempotent operations, monitoring/alerts, backup and restore procedures, and explicit handling for partial failures between file storage and database writes.
 
-## Screenshots
+## Project Screenshots
 
-Reviewed demonstration screenshots use fictional seeded demo accounts and sample submission data:
+Project evidence screenshots document the local setup, application workflows, test results, mobile layout, and GitHub repository. The files are listed in the [screenshots guide](screenshots/README.md):
 
 | Screenshot | Demonstrates |
 | --- | --- |
-| [Student dashboard](screenshots/student-dashboard.png) | Student assignments, deadlines, status, and progress. |
-| [Teacher dashboard](screenshots/teacher-dashboard.png) | Assignment/course management and teacher activity. |
-| [Assignment review](screenshots/assignment-review.png) | Teacher view of assignment requirements and a student submission. |
-| [Feedback view](screenshots/feedback-view.png) | Student view of marks and written feedback. |
-| [Mobile dashboard](screenshots/mobile-dashboard.png) | Narrow-screen, 9:16 mobile layout. |
+| [Project structure](screenshots/01_project_structure.png) | Workspace folders and project organization. |
+| [App running](screenshots/02_app_running.png) | The portal served locally in a browser. |
+| [API health](screenshots/03_api_health.png) | A successful backend health check. |
+| [Course creation](screenshots/04_teacher_course_created.png) | Teacher course management. |
+| [Assignment creation](screenshots/05_assignment_created.png) | Assignment setup and upload rules. |
+| [Student enrollment](screenshots/06_student_enrolled.png) | Student course enrollment. |
+| [Student submission](screenshots/07_student_submission.png) | Assignment file upload. |
+| [Teacher review](screenshots/08_teacher_reviewed.png) | Teacher submission review. |
+| [Grading and feedback](screenshots/09_grade_and_feedback.png) | Teacher grading and written feedback. |
+| [Student feedback](screenshots/10_student_feedback.png) | Student view of the returned grade and feedback. |
+| [Passing tests](screenshots/11_tests_passed.png) | Test run reporting 8 passed. |
+| [Mobile layout](screenshots/12_mobile_layout.png) | Responsive app view at a mobile viewport. |
+| [GitHub repository](screenshots/13_github_repository.png) | Project repository hosted on GitHub. |
 
-These are local application screenshots. No live cloud dashboard, cloud object store, GitHub commit history, or hosted application is represented here.
+Application screenshots show the local prototype, not a live cloud deployment. The current implementation uses SQLite and local filesystem storage; no cloud dashboard or hosted application is represented.
 
-## Results
+## Results and Validation
 
 - The Flask application serves both the REST API and browser frontend locally.
 - Student and teacher flows for courses, assignments, submissions, grading, and feedback are represented.
 - The project test suite currently passes **8 tests**.
-- Five reviewed screenshots are available in `screenshots/`.
+- Thirteen project evidence screenshots are available in `screenshots/`.
 
 ## Limitations
 
@@ -434,7 +462,7 @@ These are local application screenshots. No live cloud dashboard, cloud object s
 - Rate-limit configuration exists, but no rate-limiting extension is integrated.
 - Automated tests cover selected workflows, not full browser, load, accessibility, or security validation.
 
-## Future Improvements
+## Future Scope
 
 - Add PostgreSQL migrations and a production database configuration.
 - Implement provider-backed object storage with private access and signed downloads.
@@ -444,7 +472,7 @@ These are local application screenshots. No live cloud dashboard, cloud object s
 - Add browser-based end-to-end tests, accessibility checks, and responsive visual regression tests.
 - Add a verified CI pipeline and deployment instructions for a selected cloud provider.
 
-## Learning Outcomes
+## Skills and Learning Outcomes
 
 - Building a Flask application factory and REST API.
 - Modeling relational data and relationships with SQLAlchemy.
@@ -453,8 +481,6 @@ These are local application screenshots. No live cloud dashboard, cloud object s
 - Implementing deadline-aware submissions, grading, and feedback workflows.
 - Testing API behavior and documenting the difference between a local prototype and a cloud deployment.
 
-## Author
+## Conclusion
 
-**Adarsh Srivastav**
-
-Cloud Computing coursework project
+The portal demonstrates a complete local coursework workflow, from course and assignment setup through submission, grading, and feedback. It also provides a foundation for studying how application services, relational data, identity controls, and file storage could be adapted for a cloud deployment. Cloud hosting and managed storage are not implemented in this repository.
