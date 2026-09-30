@@ -1,3 +1,13 @@
+function formatSubmissionStatus(status) {
+    const labels = {
+        NOT_SUBMITTED: 'Not submitted',
+        SUBMITTED: 'Submitted',
+        LATE: 'Late',
+        GRADED: 'Graded',
+    };
+    return labels[status] || status;
+}
+
 function renderNavbar() {
     const navLinks = document.getElementById('navLinks');
     const user = Auth.getUser();
@@ -12,13 +22,14 @@ function renderNavbar() {
     }
 
     const role = user.role || 'student';
+    const currentRoute = window.location.hash.replace('#', '') || (role === 'teacher' ? 'teacher-dashboard' : 'student-dashboard');
     const routes = role === 'teacher'
         ? ['teacher-dashboard', 'courses', 'assignments']
         : ['student-dashboard', 'courses', 'assignments'];
 
     const links = routes.map(route => {
         const label = route === 'student-dashboard' ? 'Dashboard' : route === 'teacher-dashboard' ? 'Dashboard' : route === 'courses' ? 'Courses' : 'Assignments';
-        return `<button class="nav-link" data-route="${route}">${label}</button>`;
+        return `<button class="nav-link${currentRoute === route ? ' active' : ''}" data-route="${route}">${label}</button>`;
     }).join('');
 
     navLinks.innerHTML = `
@@ -158,7 +169,7 @@ function renderStudentDashboard(data) {
 
     const assignmentTiles = assignments.map(a => {
         const status = a.submission_status || 'NOT_SUBMITTED';
-        const statusClass = status.toLowerCase();
+        const statusClass = status.toLowerCase().replace(/_/g, '-');
         const due = new Date(a.deadline).toLocaleString();
         return `
             <article class="assignment-card">
@@ -167,7 +178,7 @@ function renderStudentDashboard(data) {
                         <h3>${a.title}</h3>
                         <small>${a.course_name}</small>
                     </div>
-                    <span class="status-badge ${statusClass}">${status}</span>
+                    <span class="status-badge ${statusClass}">${formatSubmissionStatus(status)}</span>
                 </div>
                 <p>${a.description || 'No description provided.'}</p>
                 <div class="meta-row">
@@ -184,12 +195,15 @@ function renderStudentDashboard(data) {
             </article>
         `;
     }).join('') || '<p class="empty-state">No assignments available yet.</p>';
+    const completedCount = Number(stats.submitted ?? 0);
+    const totalCount = Number(stats.total_assignments ?? 0);
+    const completion = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
     const submissionList = submissions.map(s => `
         <div class="mini-card submission-row">
             <div>
                 <strong>${s.assignment_title || 'Assignment'}</strong>
-                <small>${s.status}</small>
+                <small>${formatSubmissionStatus(s.status)}</small>
             </div>
             <div class="submission-actions">
                 <button class="secondary-btn" data-action="view-feedback" data-id="${s.id}">Feedback</button>
@@ -206,6 +220,7 @@ function renderStudentDashboard(data) {
                     <h1>${data.dashboard?.welcome || 'Welcome'}</h1>
                     <p>Track assignments, deadlines, teacher-led courses, and submitted work in one place.</p>
                 </div>
+                <button class="hero-action" data-route="assignments">View assignments <span aria-hidden="true">→</span></button>
             </section>
 
             <section class="stats-grid">
@@ -255,9 +270,24 @@ function renderStudentDashboard(data) {
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <h2>Course Timeline</h2>
+                        <h2>Learning snapshot</h2>
                     </div>
-                    <div class="stack-list">${courseTiles}</div>
+                    <div class="progress-summary">
+                        <div class="progress-summary-heading">
+                            <span>Assignment progress</span>
+                            <strong>${completion}%</strong>
+                        </div>
+                        <div class="progress-track" role="progressbar" aria-label="Assignment completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${completion}">
+                            <span style="width: ${completion}%"></span>
+                        </div>
+                        <p>${completedCount} of ${totalCount} assignments submitted</p>
+                        <div class="snapshot-divider"></div>
+                        <div class="snapshot-course-count">
+                            <span class="snapshot-icon" aria-hidden="true">⌂</span>
+                            <div><strong>${courses.length} ${courses.length === 1 ? 'course' : 'courses'}</strong><small>In your learning space</small></div>
+                        </div>
+                        <button class="secondary-btn snapshot-button" data-route="courses">Explore courses</button>
+                    </div>
                 </div>
             </section>
         </div>
@@ -284,7 +314,7 @@ function renderTeacherDashboard(data, assignments = [], courses = []) {
         <div class="mini-card">
             <strong>${item.assignment_title}</strong>
             <small>${item.student_name}</small>
-            <span>${item.status}</span>
+            <span>${formatSubmissionStatus(item.status)}</span>
         </div>
     `).join('') || '<p class="empty-state">No recent uploads.</p>';
 
@@ -306,6 +336,7 @@ function renderTeacherDashboard(data, assignments = [], courses = []) {
                     <h1>${data.dashboard?.welcome || 'Welcome'}</h1>
                     <p>Monitor assignment activity, review student submissions, and grade work efficiently.</p>
                 </div>
+                <button class="hero-action" data-action="focus-assignment-form">Create an assignment <span aria-hidden="true">→</span></button>
             </section>
 
             <section class="stats-grid">
@@ -405,14 +436,16 @@ function renderTeacherDashboard(data, assignments = [], courses = []) {
 }
 
 function renderAssignmentsPage(assignments = []) {
-    const cards = assignments.map(a => `
+    const cards = assignments.map(a => {
+        const status = a.submission_status || 'NOT_SUBMITTED';
+        return `
         <article class="assignment-card">
             <div class="card-top-row">
                 <div>
                     <h3>${a.title}</h3>
                     <small>${a.course_name || 'Course'}</small>
                 </div>
-                <span class="status-badge ${a.submission_status ? a.submission_status.toLowerCase() : 'not-submitted'}">${a.submission_status || 'Open'}</span>
+                <span class="status-badge ${status.toLowerCase().replace(/_/g, '-')}">${formatSubmissionStatus(status)}</span>
             </div>
             <p class="desc">${a.description || 'No description provided.'}</p>
             <div class="meta-row">
@@ -423,7 +456,8 @@ function renderAssignmentsPage(assignments = []) {
                 <button class="secondary-btn" data-action="view-assignment" data-id="${a.id}">View</button>
             </div>
         </article>
-    `).join('') || '<p class="empty-state">No assignments available.</p>';
+    `;
+    }).join('') || '<p class="empty-state">No assignments available.</p>';
 
     return `
         <div class="dashboard-shell">

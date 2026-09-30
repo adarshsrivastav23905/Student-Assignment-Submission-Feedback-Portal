@@ -1,163 +1,155 @@
-# Student Assignment Submission & Feedback Portal
+# Cloud-Based Student Assignment Submission & Feedback Portal
 
-A cloud-ready student assignment portal built with Python, Flask, SQLAlchemy, and a lightweight local storage backend that mirrors common cloud patterns such as object storage, secure file access, and role-based authorization.
+A role-based academic portal for course work, file submissions, grading, and feedback. The application uses a Flask REST API and a browser-based HTML/CSS/JavaScript client.
 
-## Project Overview
+> **Deployment status:** This repository is a local academic prototype. It currently uses SQLite and local disk storage by default; it is not connected to a hosted cloud database or object-storage provider. The storage and configuration boundaries make those deployment integrations possible, but a real provider, production secrets, and hosting setup must be configured before describing it as a live cloud deployment.
 
-This application allows:
+## Product overview
 
-- Students to register, log in, enroll in courses, submit assignments, and view feedback.
-- Teachers to create courses and assignments, review submissions, grade work, and provide feedback.
-- Admins to manage the overall environment and access protected routes.
-- A REST API to support a web-based frontend and future cloud deployment integration.
+### Student experience
 
-The project demonstrates cloud concepts such as:
+- Register, sign in, browse courses, and enroll.
+- Review assignment details, deadlines, submission status, and file requirements.
+- Upload or resubmit assignment files.
+- Download personal submissions and review marks and instructor feedback.
+- Track pending work, submissions, upcoming deadlines, and course progress.
 
-- Cloud-hosted application architecture
-- Cloud authentication using JWT
-- Role-based authorization
-- Cloud-style database persistence
-- Object/file storage abstraction
-- Secure file upload and download flow
-- Scalable REST API design
-- Local free-tier friendly deployment patterns
+### Teacher experience
 
-## Tech Stack
+- Create courses and assignments with deadlines, file rules, and marks.
+- Review assignment submissions and download student files.
+- Grade work and return feedback.
+- See class activity, submission counts, and work awaiting review.
 
-- Python 3.11+
-- Flask
-- Flask-SQLAlchemy
-- SQLite for local development and testing
-- JWT authentication
-- Werkzeug password hashing
-- HTML, CSS, and JavaScript frontend
-- Pytest for automated tests
+### Application capabilities
 
-## Project Structure
+- JWT-based authentication and role-protected API routes.
+- Flask application factory and REST endpoints.
+- SQLAlchemy data models for users, courses, enrollments, assignments, and submissions.
+- Validated file upload/download through a storage service.
+- Responsive student and teacher dashboards.
+- Pytest coverage for core authentication, authorization, submission, and grading workflows.
+
+## Screenshots
+
+The reviewed, fictional-data showcase captures are in `screenshots/`:
+
+| Suggested file | Screen | Best use |
+| --- | --- | --- |
+| `student-dashboard.png` (1920 × 1200) | Student dashboard with assignments, deadlines, and progress | LinkedIn carousel / Instagram slide |
+| `teacher-dashboard.png` (1920 × 1200) | Teacher overview with class activity and management tools | LinkedIn carousel / Instagram slide |
+| `assignment-review.png` (1920 × 540) | Assignment details and submission review | LinkedIn carousel |
+| `feedback-view.png` (1920 × 329) | Student marks and instructor feedback | Instagram carousel |
+| `mobile-dashboard.png` (1080 × 1920) | Narrow-screen student dashboard | Instagram Story / Reel cover |
+
+![Student dashboard](screenshots/student-dashboard.png)
+
+![Teacher dashboard](screenshots/teacher-dashboard.png)
+
+For additional captures, run the app locally, sign in with the seeded **demo-only** accounts below, use a browser viewport around **1440 × 1000** (or **1920 × 1080**), hide browser extensions and unrelated tabs, and scroll to the top of each screen before capturing. Use fictional demo data only; crop out the address bar if sharing a public URL, and never expose real student records, email addresses, tokens, or uploaded files.
+
+### Social post dimensions
+
+- **LinkedIn:** Capture the app at 16:9 for a single landscape image (for example 1920 × 1080). For a carousel, export a consistent set of 4:5 slides (1080 × 1350) with one feature per slide and readable type.
+- **Instagram feed:** Use 4:5 portrait (1080 × 1350) for the dashboard and workflow carousel; keep important content away from the outer edges.
+- **Instagram Story/Reel cover:** Use 9:16 portrait (1080 × 1920). Show a single focused screen or place the landscape screenshot inside a designed frame with generous margins. Do not stretch the interface.
+
+Add a concise caption, meaningful alt text, and a small project title/technology label if needed. Avoid adding fake cloud-provider logos or implying a production deployment that has not happened.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    U[Student or teacher] -->|Browser UI| F[HTML / CSS / JavaScript]
+    F -->|JSON + JWT / multipart upload| A[Flask REST API]
+    A --> AU[Authentication and role checks]
+    A --> S[Assignment and submission services]
+    AU --> D[(SQLAlchemy database)]
+    S --> D
+    S --> O[Storage service]
+    O --> L[Local filesystem adapter]
+    D -. production integration .-> CD[(Managed SQL database)]
+    O -. production integration .-> CO[Cloud object storage]
+```
+
+Locally, the seeded demonstration environment uses SQLite and local uploads. For a cloud deployment, select and configure a managed database and object-storage adapter, add production-grade identity/secrets handling, and deploy the API and frontend to hosting infrastructure. The dotted diagram paths represent future integration points, not currently provisioned services.
+
+## Technology
+
+- **Backend:** Python, Flask, Flask-CORS, Flask-SQLAlchemy, PyJWT, Werkzeug
+- **Frontend:** HTML, CSS, vanilla JavaScript
+- **Local database:** SQLite
+- **Local file storage:** Filesystem storage service
+- **Tests:** Pytest
+
+## Project structure
 
 ```text
 backend/
-  app.py
-  config.py
-  middleware/
-  models/
-  routes/
-  services/
-  utils/
+  app.py                    Flask app factory, API registration, and static frontend
+  config.py                 Environment-based settings
+  middleware/               Authentication and role authorization
+  models/                   SQLAlchemy entities and local demo-data initialization
+  routes/                   Authentication, assignment, submission, and dashboard APIs
+  services/                 Authentication and file-storage services
+  utils/                    Shared request and upload validators
 frontend/
-  index.html
-  css/
-  js/
-  
- tests/
-  test_app.py
-requirements.txt
-.env.example
-README.md
+  index.html                Application shell
+  css/style.css             Responsive visual system and components
+  js/api.js                 REST API client
+  js/auth.js                Browser authentication/session handling
+  js/app.js                 Routing, events, and page workflows
+  js/components.js          Navigation and page rendering
+tests/
+  test_app.py               API and workflow tests
+instance/                   Local SQLite databases (ignored by Git)
+uploads/                    Local submission files (ignored by Git)
+screenshots/                Curated portfolio images (add reviewed captures here)
 ```
 
-## Features
+## Run locally (Windows PowerShell)
 
-### Authentication and Authorization
+Python 3.11 or newer is recommended.
 
-- User registration and login
-- JWT-based session management
-- Role-based access control for students, teachers, and admins
-- Protected routes using middleware decorators
-
-### Course and Assignment Management
-
-- Create and manage courses
-- Create assignments with due dates and rules
-- Restrict access to teacher-owned courses
-- List assignments for enrolled students
-
-### Submission Handling
-
-- File upload validation
-- Storage abstraction for uploaded files
-- Download submitted files
-- Prevent late submission when disallowed
-- Allow resubmission if enabled
-
-### Feedback and Grading
-
-- Teacher grading interface
-- Marks validation against assignment maximum
-- Feedback saved in database
-- Student feedback retrieval endpoint
-
-## Local Setup
-
-1. Create and activate a virtual environment:
-
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\activate
-```
-
-2. Install dependencies:
-
-```bash
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-```
-
-3. Create environment variables if needed by copying the example file:
-
-```bash
-copy .env.example .env
-```
-
-4. Start the app:
-
-```bash
+Copy-Item .env.example .env
 python -m flask --app backend.app run
 ```
 
-Alternative:
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000). The local database is initialized with sample accounts, courses, and assignments when it is empty.
 
-```bash
-python run.py
-```
+### Seeded demo sign-in
 
-5. Open the frontend in a browser at:
+| Role | Email | Password |
+| --- | --- | --- |
+| Teacher | `teacher@example.com` | `teacher123` |
+| Student | `student@example.com` | `student123` |
 
-```text
-http://localhost:5000/
-```
+These public sample credentials are for local demonstrations only. Do not use them in a deployment or store real student information in a demo environment. Reset a disposable local database before generating showcase content if you need a clean dataset.
 
-## Running Tests
+## Run the tests
 
-```bash
+```powershell
 python -m pytest -q
 ```
 
-The project includes automated tests covering:
+The current tests exercise health checks, registration and login, role restrictions, assignment creation, student uploads, downloads, and grading.
 
-- health checks
-- user registration and login
-- teacher assignment creation
-- student submission upload
-- grading workflow
+## Configuration and cloud deployment
 
-## Cloud Deployment Notes
+Settings are read from environment variables; see [.env.example](.env.example). For production:
 
-This implementation uses a local filesystem storage layer as a free-tier-friendly substitute for a production cloud object store. In a production environment, the same service layer can be swapped for:
+1. Set unique, high-entropy `SECRET_KEY` and `JWT_SECRET_KEY` values outside source control.
+2. Configure a managed database URL and a cloud object-storage implementation/credentials using the provider's secret manager.
+3. Set production CORS origins, upload limits, logging, and HTTPS.
+4. Disable demo-data seeding and demo accounts for production use.
+5. Deploy the API and frontend, configure health checks, and verify access controls and backup/retention policies.
 
-- AWS S3
-- Azure Blob Storage
-- Google Cloud Storage
-
-The code is structured so the storage abstraction remains consistent while the provider changes.
-
-## Security Considerations
-
-- No hardcoded passwords, API keys, secrets, or credentials are included in source files.
-- JWT tokens are used for authenticated API access.
-- File validation enforces extension and size constraints.
-- Server-side deadline checks prevent client-side tampering.
-- Role checks restrict access to sensitive endpoints.
+Do not commit `.env`, credentials, real student data, or unreviewed screenshots.
 
 ## License
 
-This project is intended for academic and educational use in the context of cloud computing coursework.
+This project is intended for academic and educational use as part of cloud computing coursework.

@@ -67,6 +67,12 @@ const App = {
                     await this.enrollInCourse(id);
                     return;
                 }
+
+                if (actionName === 'focus-assignment-form') {
+                    document.getElementById('assignmentForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('assignmentTitle')?.focus({ preventScroll: true });
+                    return;
+                }
             }
 
             if (event.target.id === 'logoutBtn') {
